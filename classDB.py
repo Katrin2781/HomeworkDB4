@@ -83,37 +83,19 @@ class SQLdb:
                 print('Клиента с таким id нет!')
             else:
                 print('Данные по клиенту: \n', row)
-                col = input("Введите поле, которое хотите изменить(фамилия, имя, отчетсво, email): ").lower()
-                if col == 'фамилия':
-                    fname = input("Введите новое значение: ")
-                    cursor.execute("""
-                    UPDATE clients SET f_name=%s WHERE id_client=%s;""",(fname, idcl))
-                    self.con.commit()
-                    cursor.execute("SELECT * FROM clients WHERE id_client=%s;", (idcl,))
-                    print('Данные успешно изменены! \n', cursor.fetchone())
-                elif col == 'имя':
-                    lname = input("Введите новое значение: ")
-                    cursor.execute("""
-                                    UPDATE clients SET s_name=%s WHERE id_client=%s;""", (lname, idcl))
-                    self.con.commit()
-                    cursor.execute("SELECT * FROM clients WHERE id_client=%s;", (idcl,))
-                    print('Данные успешно изменены! \n', cursor.fetchone())
-                elif col == 'отчество':
-                    sname = input("Введите новое значение: ")
-                    cursor.execute("""
-                                    UPDATE clients SET l_name=%s WHERE id_client=%s;""", (sname, idcl))
-                    self.con.commit()
-                    cursor.execute("SELECT * FROM clients WHERE id_client=%s;", (idcl,))
-                    print('Данные успешно изменены! \n', cursor.fetchone())
-                elif col == 'email':
-                    mail = input("Введите новое значение: ")
-                    cursor.execute("""
-                                    UPDATE clients SET email=%s WHERE id_client=%s;""", (mail, idcl))
-                    self.con.commit()
-                    cursor.execute("SELECT * FROM clients WHERE id_client=%s;", (idcl,))
-                    print('Данные успешно изменены! \n', cursor.fetchone())
-                else:
-                    print('Такого поля в таблице клиент нет!')
+                column = input("Введите поле, которое хотите изменить(фамилия, имя, отчетсво, email): ").lower()
+                fields = {'фамилия': 'f_name',
+                          'имя': 's_name',
+                          'отчество': 'l_name',
+                          'email': 'email',
+                          }
+                col = fields[column]
+                data = input('Введите новое значение: ')
+                cursor.execute(f"UPDATE clients SET {col}=%s WHERE id_client=%s;", (data, idcl))
+                self.con.commit()
+                cursor.execute("SELECT * FROM clients WHERE id_client=%s;", (idcl,))
+                print(cursor.fetchone())
+
 
     def delPhone(self):
         """Метод позволяющий удалить телефон для существующего клиента"""
@@ -153,29 +135,22 @@ class SQLdb:
 
     def findClient(self):
         """Метод позволяющий найти клиента по его данным (имени, фамилии, email-у или телефону)"""
-        col = input("Введите поле по которому будет осуществлен поиск \n "
-                    "(имя, фамилия, email или телефон): ")
+        collumn = input("Введите поле по которому будет осуществлен поиск \n "
+                        "(имя, фамилия, email или телефон): ").lower()
         with self.con.cursor() as cursor:
-            if col == 'фамилия':
-                fname = input('Введите фамилию клиента: ')
-                cursor.execute("SELECT * FROM clients WHERE f_name=%s;", (fname,))
-            elif col == 'имя':
-                sname = input('Введите имя клиента: ')
-                cursor.execute("SELECT * FROM clients WHERE s_name=%s;", (sname,))
-
-            elif col == 'отчество':
-                lname = input('Введите отчество клиента: ')
-                cursor.execute("SELECT * FROM clients WHERE l_name=%s;", (lname,))
-            elif col == 'email':
-                email = input('Введите email клиента: ')
-                cursor.execute("SELECT * FROM clients WHERE email=%s;", (email,))
-            elif col == 'телефон':
-                phone = input('Введите телефон клиента: ')
-                cursor.execute("""SELECT * FROM clients WHERE id_client=
-                                (SELECT id_client FROM phones WHERE phone=%s);
-                               """, (phone,))
+            fields = {'фамилия':'f_name',
+                      'имя': 's_name',
+                      'отчество': 'l_name',
+                      'email': 'email',
+                      'телефон':'phone'}
+            col = fields[collumn]
+            data = input('Введите значение: ')
+            if col != 'phone':
+                cursor.execute(f"SELECT * FROM clients WHERE {col}=%s;", (data,))
             else:
-                print('Такого поля нет в таблицах!')
+                cursor.execute("""SELECT * FROM clients WHERE id_client=
+                                                (SELECT id_client FROM phones WHERE phone=%s);
+                                               """, (data,))
             row = cursor.fetchone()
             if row:
                 print("%10s | %20s | %20s | %20s | %30s" % ('id_client', 'f_name', 's_name', 'l_name', 'email'));
